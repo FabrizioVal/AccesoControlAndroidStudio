@@ -2,6 +2,8 @@ package com.example.accesocontrolmongodb;
 
 import static android.content.ContentValues.TAG;
 
+import static com.example.accesocontrolmongodb.SignInActivity.RetrofitClient.BASE_URL;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -63,7 +65,12 @@ public class SignInActivity extends AppCompatActivity {
     private void performSignIn(String email, String password) {
         ApiService apiService = RetrofitClient.getApiService();
 
+
+        String apiUrl = BASE_URL + "api/auth/signin";
+        Toast.makeText(SignInActivity.this,"API URL: " + apiUrl, Toast.LENGTH_LONG).show(); //LLEGA ACA, ME TIRA LA IP
+        Log.d(TAG, "API URL: " + apiUrl);
         Call<ApiResponse> call = apiService.signIn(new SignInRequest(email, password)); //aca se menciona que funcion se usa
+
         call.enqueue(new Callback<ApiResponse>() {
             @Override
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
@@ -103,8 +110,9 @@ public class SignInActivity extends AppCompatActivity {
     // Retrofit Client info
 
     public class RetrofitClient {
-        private static final String BASE_URL = "http://10.0.2.2:3000/"; //specific ip for emulator and port number
+        public static final String BASE_URL = "http://192.168.0.11:8080/"; //specific ip for emulator and port number
         //It doesnt ask for an APIKey, only URL
+
 
         private static Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
