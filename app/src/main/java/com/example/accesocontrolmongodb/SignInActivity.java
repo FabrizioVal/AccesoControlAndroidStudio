@@ -8,6 +8,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -67,35 +69,47 @@ public class SignInActivity extends AppCompatActivity {
 
 
         String apiUrl = BASE_URL + "api/auth/signin";
-        Toast.makeText(SignInActivity.this,"API URL: " + apiUrl, Toast.LENGTH_LONG).show(); //LLEGA ACA, ME TIRA LA IP
+        // Toast.makeText(SignInActivity.this,"API URL: " + apiUrl, Toast.LENGTH_LONG).show(); //LLEGA ACA, ME TIRA LA IP
         Log.d(TAG, "API URL: " + apiUrl);
         Call<ApiResponse> call = apiService.signIn(new SignInRequest(email, password)); //aca se menciona que funcion se usa
 
         call.enqueue(new Callback<ApiResponse>() {
             @Override
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
-                if (response.isSuccessful()) {
+
+                // The logic is the following: I send data from here, the server returns a response(res) number
+                // (404, 500, etc) and here i identify which one it is depending on the function it is asociated with.
+
+                int httpStatusCode = response.code();
+
+                if (httpStatusCode == 200) {
+
+                    // Sign-in was successful
                     ApiResponse apiResponse = response.body();
-                    if (apiResponse.isSuccess()) {
-                        // Sign-in was successful, navigate to main activity
-
-                        Toast.makeText(SignInActivity.this, "Sign-in successful", Toast.LENGTH_SHORT).show();
-
+                    if (apiResponse != null && apiResponse.isSuccess()) { // Both factors are checked for added security.
+                        // Handle the success scenario
                         Log.d(TAG, "Sign in successful");
-
+                        Toast.makeText(SignInActivity.this, "Sign-in successful", Toast.LENGTH_LONG).show();
                         Intent intent = new Intent(SignInActivity.this, HomeMainActivity.class);
                         startActivity(intent);
                         finish();
                     } else {
-                        // Sign-in failed, show error message
-                        String errorMessage = apiResponse.getMessage();
-                        Toast.makeText(SignInActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+                        // Handle the case where the server reports success as false
                         Log.d(TAG, "Sign in not successful");
+                        Toast.makeText(SignInActivity.this, "Sign-in not successful", Toast.LENGTH_LONG).show();
                     }
+                } else if (httpStatusCode == 404) {
+                    // Handle 404 (Not Found) error for invalid credentials
+                    Log.d(TAG, "Invalid credentials");
+                    Toast.makeText(SignInActivity.this, "Invalid credentials", Toast.LENGTH_LONG).show();
+                } else if (httpStatusCode == 500) {
+                    // Handle 500 (Internal Server Error) or other server errors
+                    Log.d(TAG, "Server error");
+                    Toast.makeText(SignInActivity.this, "Server error", Toast.LENGTH_LONG).show();
                 } else {
-                    // Show error message
-                    Toast.makeText(SignInActivity.this, "Network error", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "Network error");
+                    // Handle other HTTP errors
+                    Log.d(TAG, "HTTP error: " + httpStatusCode);
+                    Toast.makeText(SignInActivity.this, "HTTP error: " + httpStatusCode, Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -107,10 +121,11 @@ public class SignInActivity extends AppCompatActivity {
         });
     }
 
+
     // Retrofit Client info
 
     public class RetrofitClient {
-        public static final String BASE_URL = "http://192.168.0.11:8080/"; //specific ip for emulator and port number
+        public static final String BASE_URL = "http://192.168.0.11:3000/"; //specific ip for emulator and port number
         //It doesnt ask for an APIKey, only URL
 
 
