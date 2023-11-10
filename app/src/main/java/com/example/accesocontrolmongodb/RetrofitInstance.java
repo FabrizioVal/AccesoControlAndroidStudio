@@ -38,6 +38,9 @@ public class RetrofitInstance { // client
         @POST("api/auth/lockreport")
         Call<ApiResponse> uploadCommand(@Body CommandActivity.CommandRequest commandRequest);
 
+        @POST("api/auth/register")
+        Call<ApiResponse> registerUser(@Body SignInActivity.RegisterRequest request);
+
     }
 
     public class ApiResponse {

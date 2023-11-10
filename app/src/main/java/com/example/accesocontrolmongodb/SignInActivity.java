@@ -32,7 +32,7 @@ public class SignInActivity extends AppCompatActivity {
 
 
     private EditText editTextName, editTextPassword;
-    private Button buttonSignIn;
+    private Button buttonSignIn, buttonRegister;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +42,7 @@ public class SignInActivity extends AppCompatActivity {
         editTextName = findViewById(R.id.edit_name);
         editTextPassword = findViewById(R.id.edit_password);
         buttonSignIn = findViewById(R.id.btn_sign_in);
+        buttonRegister = findViewById(R.id.btn_register);
 
         buttonSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,10 +64,22 @@ public class SignInActivity extends AppCompatActivity {
             }
         });
 
+        buttonRegister.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String email = editTextName.getText().toString();
+                String password = editTextPassword.getText().toString();
+
+                // Call API with email and password
+                // Handle API response
+
+                sendRegistrationDataToServer(email, password);
+            }
+        });
+
 
     }
-
-
 
     // The Request is made and it is decided if it was successful or not.
     private void performSignIn(String email, String password) {
@@ -136,7 +149,46 @@ public class SignInActivity extends AppCompatActivity {
         }
     }
 
+    private void sendRegistrationDataToServer(String email, String password) {
+        RetrofitInstance.ApiService apiService = RetrofitInstance.getRetrofitInstance().create(RetrofitInstance.ApiService.class);
 
+        Call<RetrofitInstance.ApiResponse> call = apiService.registerUser(new RegisterRequest (email, password));
+        call.enqueue(new Callback<RetrofitInstance.ApiResponse>() {
+            @Override
+            public void onResponse(Call<RetrofitInstance.ApiResponse> call, Response<RetrofitInstance.ApiResponse> response) {
+                // Handle the server response
+                if (response.isSuccessful()) {
+                    RetrofitInstance.ApiResponse apiResponse = response.body();
+                    if (apiResponse != null && apiResponse.isSuccess()) {
+                        // Registration was successful
+                        Toast.makeText(SignInActivity.this, "Registration successful", Toast.LENGTH_LONG).show();
+                        // You can navigate to another activity or perform any other action
+                    } else {
+                        // Registration failed
+                        Toast.makeText(SignInActivity.this, "Registration failed", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    // Handle other HTTP errors
+                    Toast.makeText(SignInActivity.this, "HTTP error: " + response.code(), Toast.LENGTH_LONG).show();
+                }
+            }
 
+            @Override
+            public void onFailure(Call<RetrofitInstance.ApiResponse> call, Throwable t) {
+                // Handle network or other errors
+                Toast.makeText(SignInActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    public class RegisterRequest {
+        private String email;
+        private String password;
+
+        public RegisterRequest(String email, String password) {
+            this.email = email;
+            this.password = password;
+        }
+    }
 
 }
